@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VIT-AP University</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+    <!-- HOME PAGE -->
+    <section id="homeSection" class="page active">
+        <header class="top-bar">
+            <div class="logo-container">
+                <img src="images/vitap_logo.png" class="logo-full">
+            </div>
+
+
+            <button id="loginIcon" class="icon-btn">
+                <span class="icon-user">👤</span>
+                <span class="icon-text">Login</span>
+            </button>
+        </header>
+
+        <main class="home-main">
+            <!-- Hero / VIT-AP Symbol -->
+            <section class="hero">
+                <div class="hero-symbol">
+                    <div class="hero-logo-container">
+                        <img src="images/vitap_logo.png" class="hero-logo">
+                    </div>
+
+
+                    <p class="symbol-caption">
+                        A Premier Institution for Excellence in Education, Research & Innovation
+                    </p>
+                </div>
+            </section>
+
+            <!-- About VIT-AP -->
+            <section class="content-section">
+                <h2>About VIT-AP</h2>
+                <p class="content-text">
+                    VIT-AP has been a forerunner in delivering quality education. Consistently ranked among
+                    the top educational institutes in the country, the VIT group of institutions have had a
+                    proud tradition of pursuing knowledge and excellence. In keeping with this tradition,
+                    the leadership at VIT-AP resonates a dynamic blend of academic initiative and industry
+                    partnership with a vision of creating one of the finest academic destinations in the world.
+                </p>
+            </section>
+
+            <!-- Schools -->
+            <section class="content-section">
+                <h2>Schools</h2>
+                <div class="schools-grid">
+                    <!-- School of CSE -->
+                    <div class="school-card clickable" onclick="window.location.href='cse.html'">
+                        <h3>School of Computer Science and Engineering (CSE)</h3>
+                        <ul>
+                            <li>CSE - Core</li>
+                            <li>CSE - Artificial Intelligence</li>
+                        </ul>
+                    </div>
+
+
+                    <!-- School of Electronics -->
+                    <div class="school-card">
+                        <h3>School of Electronics</h3>
+                        <ul>
+                            <li>Electronics and Communication Engineering</li>
+                            <li>Embedded Systems & VLSI (specializations can be added)</li>
+                        </ul>
+                    </div>
+
+                    <!-- School of Mechanics -->
+                    <div class="school-card">
+                        <h3>School of Mechanics</h3>
+                        <ul>
+                            <li>Mechanical Engineering</li>
+                            <li>Advanced Manufacturing (specializations can be added)</li>
+                        </ul>
+                    </div>
+
+                    <!-- School of Law -->
+                    <div class="school-card">
+                        <h3>School of Law</h3>
+                        <ul>
+                            <li>Integrated Law Programs</li>
+                            <li>Specialized Law Electives</li>
+                        </ul>
+                    </div>
+
+                    <!-- School of Business -->
+                    <div class="school-card">
+                        <h3>School of Business</h3>
+                        <ul>
+                            <li>BBA & MBA Programs</li>
+                            <li>Industry-Focused Specializations</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>© <span id="yearHome"></span> VIT-AP University. All rights reserved.</p>
+        </footer>
+    </section>
+
+    <!-- LOGIN PAGE -->
+    <section id="loginSection" class="page hidden">
+        <header class="top-bar login-bar">
+            <button id="homeBtn" class="icon-btn secondary">
+                ⬅ Home
+            </button>
+            <div class="login-title">
+                VIT-AP University &nbsp;•&nbsp; Portal Login
+            </div>
+        </header>
+
+        <main class="login-main">
+            <section class="login-card">
+                <h2>Login</h2>
+                <form>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role">
+                            <option value="student">Student</option>
+                            <option value="faculty">Faculty</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userId">University ID / Email</label>
+                        <input
+                            type="text"
+                            id="userId"
+                            name="userId"
+                            placeholder="e.g., 21BCE0000 or name@vitap.ac.in"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="rememberMe" />
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" class="link-small">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Sign In</button>
+                    <p class="note">
+                        By logging in, you agree to the university's IT usage policies.
+                    </p>
+                </form>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>© <span id="yearLogin"></span> VIT-AP University. All rights reserved.</p>
+        </footer>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

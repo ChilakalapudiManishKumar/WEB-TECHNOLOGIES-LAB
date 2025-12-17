@@ -1,0 +1,463 @@
+/* =========================================================
+   ROOT VARIABLES & GLOBAL STYLES
+   ========================================================= */
+:root {
+    --maroon: #800000;
+    --maroon-dark: #5c0000;
+    --accent: #f0c040;
+    --bg-light: #ffffff;
+    --text-dark: #222222;
+    --text-muted: #666666;
+    --border-soft: #e3e3e3;
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --radius-lg: 16px;
+    --transition-fast: 0.3s ease;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg-light);
+    color: var(--text-dark);
+}
+
+
+/* =========================================================
+   PAGE VISIBILITY
+   ========================================================= */
+
+.page {
+    display: none;
+    min-height: 100vh;
+    background: #ffffff;
+}
+
+.page.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.hidden {
+    display: none;
+}
+
+
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 8vw;
+    border-bottom: 1px solid var(--border-soft);
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* Logo */
+.logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--maroon);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.logo-main {
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    font-size: 1rem;
+}
+
+.logo-sub {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+}
+
+/* Login Icon Button */
+.icon-btn {
+    border: 1px solid var(--maroon);
+    background: var(--maroon);
+    color: #ffffff;
+    padding: 8px 18px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background var(--transition-fast), transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+    box-shadow: var(--shadow-soft);
+}
+
+.icon-btn:hover {
+    background: var(--maroon-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.icon-btn.secondary {
+    background: #ffffff;
+    color: var(--maroon-dark);
+    border-color: var(--maroon-dark);
+}
+
+.icon-btn.secondary:hover {
+    background: var(--maroon);
+    color: #ffffff;
+}
+
+
+/* Full rectangular logo replacing text */
+.logo-container {
+    display: flex;
+    align-items: center;
+    height: 50px; /* SAME height as old header area */
+}
+
+.logo-full {
+    height: 45px;        /* adjust this if needed */
+    width: auto;         /* keeps original aspect ratio */
+    object-fit: contain; /* shows the full rectangular logo */
+}
+
+
+/* =========================================================
+   HOME PAGE
+   ========================================================= */
+
+.home-main {
+    flex: 1;
+    padding: 32px 8vw 40px;
+}
+
+/* Hero / Logo Image */
+.hero {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.hero-symbol {
+    text-align: center;
+}
+
+/* Logo Image */
+.symbol-image {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 12px;
+}
+
+.symbol-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+    border: 4px solid #800000;
+}
+
+.symbol-caption {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+/* RECTANGULAR HOME PAGE LOGO */
+.hero-logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;  /* spacing above text */
+}
+
+.hero-logo {
+    width: 320px;   /* Adjust size here */
+    height: auto;   /* Maintain natural aspect ratio */
+    object-fit: contain;
+}
+
+
+/* =========================================================
+   CONTENT SECTIONS (ABOUT, PROGRAMS, ETC.)
+   ========================================================= */
+
+.page-content {
+    padding: 40px 8vw 60px;
+}
+
+.content-section {
+    margin-bottom: 50px;
+}
+
+.content-section h2 {
+    font-size: 1.6rem;
+    color: var(--maroon-dark);
+    margin-bottom: 20px;
+    border-left: 4px solid var(--maroon);
+    padding-left: 10px;
+}
+
+.content-text {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   SCHOOL / PROGRAM CARDS
+   ========================================================= */
+
+.schools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.school-card {
+    background: #ffffff;
+    border-radius: 18px;
+    border: 1px solid var(--border-soft);
+    padding: 22px 20px 26px;
+    min-height: 250px;
+    box-shadow: 0 4px 16px rgba(128, 0, 0, 0.05);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    position: relative;
+    overflow: visible; /* allow zoomed image to show */
+}
+
+.school-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(128, 0, 0, 0.12);
+}
+
+.school-card h3 {
+    font-size: 1.1rem;
+    color: var(--maroon-dark);
+    margin-bottom: 10px;
+}
+
+/* Program images (with zoom-in-place on hover) */
+.program-img {
+    width: 100%;
+    height: auto;           /* let image keep natural height */
+    max-height: 220px;      /* optional: limit very tall images */
+    object-fit: contain;    /* show full photo, no cropping */
+    border-radius: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 10px rgba(128, 0, 0, 0.15);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    position: relative;
+    z-index: 1;
+}
+
+
+.school-card:hover .program-img {
+    transform: scale(1.35);              /* zoom but stay in place */
+    transform-origin: center center;
+    z-index: 5;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* Clickable card (used on home page to open CSE page) */
+.clickable {
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   LOGIN PAGE
+   ========================================================= */
+
+.login-main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 32px 8vw;
+}
+
+.login-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--maroon-dark);
+}
+
+.login-card {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 28px 24px 30px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid #f3f3f3;
+}
+
+.login-card h2 {
+    text-align: center;
+    color: var(--maroon-dark);
+    margin-bottom: 20px;
+}
+
+/* Form Inputs */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group input,
+.form-group select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    font-size: 0.95rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: var(--maroon);
+    box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.12);
+}
+
+/* Login Button */
+.btn-primary {
+    width: 100%;
+    padding: 10px;
+    border-radius: 999px;
+    background: var(--maroon);
+    color: #ffffff;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-primary:hover {
+    background: var(--maroon-dark);
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.footer {
+    padding: 14px 8vw;
+    background: #fafafa;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 600px) {
+    .icon-text { 
+        display: none; 
+    }
+
+    .icon-btn { 
+        padding-inline: 10px; 
+    }
+
+    .schools-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.school-section {
+    padding: 40px 80px;
+    background: #fff;
+}
+
+.school-section h2 {
+    font-size: 32px;
+    color: var(--maroon);
+    margin-bottom: 20px;
+}
+
+.school-description {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 30px;
+    line-height: 1.7;
+}
+
+.programme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.programme-card {
+    background: #fafafa;
+    border: 1px solid #e3e3e3;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    transition: 0.3s;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+}
+
+.programme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.programme-images {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.programme-images img {
+    width: 30%;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+}
+
+.programme-card h3 {
+    margin: 10px 0 5px;
+    color: var(--maroon-dark);
+}
+
+.programme-card p {
+    font-size: 14px;
+    color: #444;
+}

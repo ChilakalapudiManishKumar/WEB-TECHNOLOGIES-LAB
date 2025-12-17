@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCOPE – School of Computer Science and Engineering</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="top-bar">
+    <button onclick="window.location.href='index.html'" class="icon-btn secondary">
+        ⬅ Home
+    </button>
+    <div class="login-title">
+        School of Computer Science and Engineering (SCOPE)
+    </div>
+</header>
+
+<main class="page-content">
+
+    <!-- ABOUT SECTION -->
+    <section class="content-section">
+        <h2>About School</h2>
+        <p>
+            The Department of Computer Science and Engineering was established in 2017 
+            and became the School of Computer Science and Engineering (SCOPE) in 
+            January 2019. At present, the School is headed by Dr. CH. Pradeep Reddy. 
+            The School has qualified and committed faculty members who offer impressive 
+            instruction in a variety of modes, exploring experiential learning approaches 
+            and new pedagogical methods in order to provide proper learning to students. 
+            The school provides the necessary infrastructure, hardware, and software to 
+            support the faculty for their continuous learning and research.
+        </p>
+    </section>
+
+    <!-- PROGRAMS SECTION -->
+    <section class="content-section">
+        <h2>Programs Offered</h2>
+
+        <div class="schools-grid">
+
+            <div class="school-card">
+                <img src="images/cse_core.png" class="program-img" alt="CSE Core">
+                <h3>B.Tech CSE – Core</h3>
+                <p>
+                    The fundamental Computer Science engineering program focusing on 
+                    algorithms, data structures, operating systems, networks, and 
+                    software development.
+                </p>
+            </div>
+
+            <div class="school-card">
+                <img src="images/cse-ai.jpg" class="program-img" alt="CSE AI">
+                <h3>B.Tech CSE – Artificial Intelligence (AI)</h3>
+                <p>
+                    Specialization in machine learning, neural networks, data science, 
+                    natural language processing, deep learning, and autonomous systems.
+                </p>
+            </div>
+
+            <div class="school-card">
+                <img src="images/blockchain.png" class="program-img" alt="Blockchain">
+                <h3>B.Tech CSE – Blockchain</h3>
+                <p>
+                    Focus on distributed ledger technologies, smart contracts, Web3, 
+                    cryptography, and blockchain-based applications.
+                </p>
+            </div>
+
+            <div class="school-card">
+                <img src="images/cyber.webp" class="program-img" alt="Cyber Security">
+                <h3>B.Tech CSE – Cyber Security (CS)</h3>
+                <p>
+                    Training in ethical hacking, network security, digital forensics, 
+                    cryptography, security protocols, and intrusion detection systems.
+                </p>
+            </div>
+
+            <div class="school-card">
+                <img src="images/data_analytics.webp" class="program-img" alt="Data Analytics">
+                <h3>B.Tech CSE – Data Analytics (DA)</h3>
+                <p>
+                    Specialization in big data, predictive analytics, visualization, 
+                    AI-driven analytics, and business intelligence systems.
+                </p>
+            </div>
+
+            <div class="school-card">
+                <img src="images/software_eng.webp" class="program-img" alt="Software Engineering">
+                <h3>B.Tech CSE – Software Engineering (SE)</h3>
+                <p>
+                    Focused on large-scale software design, development cycles, DevOps, 
+                    testing, cloud deployment, and project management.
+                </p>
+            </div>
+
+            <div class="school-card">
+                <img src="images/csbs.webp" class="program-img" alt="CSBS">
+                <h3>B.Tech CSBS – Computer Science & Business Systems</h3>
+                <p>
+                    Industry-driven program blending computer science with business 
+                    strategy, analytics, economics, management, and modern computational tools.
+                </p>
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+<footer class="footer">
+    <p>© <span id="year"></span> VIT-AP University. All rights reserved.</p>
+</footer>
+
+<script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
