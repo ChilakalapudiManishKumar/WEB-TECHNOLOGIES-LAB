@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTML5 Canvas</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;   /* Horizontal center */
+            align-items: center;       /* Vertical center */
+            background-color: #f4f6f8;
+            font-family: Arial, sans-serif;
+        }
+
+        .canvas-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        canvas {
+            border: 2px solid #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="canvas-container">
+    <h2>HTML5 Canvas Demo</h2>
+
+    <canvas id="myCanvas" width="500" height="300">
+        Your browser does not support the canvas element.
+    </canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Filled Rectangle
+    ctx.fillStyle = "#3498db";
+    ctx.fillRect(30, 30, 120, 80);
+
+    // Filled Circle
+    ctx.beginPath();
+    ctx.arc(250, 70, 40, 0, 2 * Math.PI);
+    ctx.fillStyle = "#e74c3c";
+    ctx.fill();
+
+    // Straight Line
+    ctx.beginPath();
+    ctx.moveTo(50, 180);
+    ctx.lineTo(450, 180);
+    ctx.strokeStyle = "#2ecc71";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Text
+    ctx.font = "24px Arial";
+    ctx.fillStyle = "#2c3e50";
+    ctx.fillText("HTML5 Canvas", 150, 250);
+</script>
+
+</body>
+</html>

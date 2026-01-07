@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management System</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #eef2f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            width: 95%;
+            max-width: 1000px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+        }
+
+        /* FORM */
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        input {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .register-btn {
+            grid-column: span 2;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #3498db;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .register-btn:hover {
+            background: #2980b9;
+        }
+
+        /* ACTION BUTTON */
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .clear-btn:hover {
+            background: #c0392b;
+        }
+
+        /* MESSAGE */
+        .message {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        thead {
+            background: #f3f6fa;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        th {
+            color: #2c3e50;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <h1>👤 User Management System</h1>
+
+    <div class="form-section">
+        <form onsubmit="registerUser(event)">
+            <input type="text" id="name" placeholder="Full Name">
+            <input type="email" id="email" placeholder="Email Address">
+            <input type="text" id="mobile" placeholder="Mobile Number">
+            <input type="password" id="password" placeholder="Password">
+
+            <button class="register-btn" type="submit">Register User</button>
+        </form>
+    </div>
+
+    <button class="clear-btn" onclick="clearAllUsers()">Clear All Users</button>
+
+    <div class="message" id="message"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="userTable"></tbody>
+    </table>
+</div>
+
+<script>
+    function getUsers() {
+        return JSON.parse(localStorage.getItem("users")) || [];
+    }
+
+    function saveUsers(users) {
+        localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    function registerUser(event) {
+        event.preventDefault();
+
+        const name = document.getElementById("name").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const mobile = document.getElementById("mobile").value.trim();
+        const password = document.getElementById("password").value;
+
+        if (!name || !email || !mobile || !password) {
+            showMessage("All fields are mandatory", "red");
+            return;
+        }
+
+        if (!/^\d{10}$/.test(mobile)) {
+            showMessage("Mobile number must be 10 digits", "red");
+            return;
+        }
+
+        if (password.length < 6) {
+            showMessage("Password must be minimum 6 characters", "red");
+            return;
+        }
+
+        const users = getUsers();
+
+        if (users.some(u => u.email === email)) {
+            showMessage("Email already registered", "red");
+            return;
+        }
+
+        users.push({ name, email, mobile, password });
+        saveUsers(users);
+        loadUsers();
+        showMessage("User Registered Successfully", "green");
+        event.target.reset();
+    }
+
+    function loadUsers() {
+        const users = getUsers();
+        const table = document.getElementById("userTable");
+        table.innerHTML = "";
+
+        users.forEach((user, index) => {
+            table.innerHTML += `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.mobile}</td>
+                    <td>
+                        <button class="delete-btn" onclick="deleteUser(${index})">
+                            Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function deleteUser(index) {
+        const users = getUsers();
+        users.splice(index, 1);
+        saveUsers(users);
+        loadUsers();
+        showMessage("User Deleted Successfully", "green");
+    }
+
+    function clearAllUsers() {
+        if (confirm("This will remove all users. Continue?")) {
+            localStorage.removeItem("users");
+            loadUsers();
+            showMessage("All Users Cleared", "green");
+        }
+    }
+
+    function showMessage(text, color) {
+        const msg = document.getElementById("message");
+        msg.textContent = text;
+        msg.style.color = color;
+        setTimeout(() => msg.textContent = "", 3000);
+    }
+
+    loadUsers();
+</script>
+
+</body>
+</html>
