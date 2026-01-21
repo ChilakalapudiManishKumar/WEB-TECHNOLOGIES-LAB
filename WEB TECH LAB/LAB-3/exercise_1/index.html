@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adaptive Registration (No CSS)</title>
+</head>
+
+<body>
+  <center>
+    <h2>Adaptive Registration Form</h2>
+    <p>
+      Rules change based on Role (Student / Teacher / Admin).<br>
+      Admin needs stronger password + company email domain.
+    </p>
+
+    <form id="regForm" novalidate>
+      <table cellpadding="6">
+        <tr>
+          <td align="right"><b>Name</b></td>
+          <td>
+            <input type="text" id="name" placeholder="Full name">
+            <div id="errName"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="right"><b>Email</b></td>
+          <td>
+            <input type="email" id="email" placeholder="name@example.com">
+            <div id="errEmail"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="right"><b>Age</b></td>
+          <td>
+            <input type="number" id="age" placeholder="18" min="1">
+            <div id="errAge"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="right"><b>Role</b></td>
+          <td>
+            <select id="role">
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Admin</option>
+            </select>
+            <div id="roleHint"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="right"><b>Password</b></td>
+          <td>
+            <input type="password" id="password" placeholder="Create password">
+            <div id="passHint"></div>
+            <div id="errPass"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="right"><b>Confirm</b></td>
+          <td>
+            <input type="password" id="confirm" placeholder="Re-type password">
+            <div id="errConfirm"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td align="right" valign="top"><b>Skills</b></td>
+          <td>
+            <label><input type="checkbox" class="skill" value="HTML"> HTML</label><br>
+            <label><input type="checkbox" class="skill" value="CSS"> CSS</label><br>
+            <label><input type="checkbox" class="skill" value="JavaScript"> JavaScript</label><br>
+            <label><input type="checkbox" class="skill" value="Python"> Python</label><br>
+            <label><input type="checkbox" class="skill" value="C"> C</label><br>
+            <label><input type="checkbox" class="skill" value="SQL"> SQL</label><br>
+            <div id="skillsHint"></div>
+            <div id="errSkills"></div>
+          </td>
+        </tr>
+
+        <!-- Student field -->
+        <tr id="rowSchool">
+          <td align="right"><b>School/College</b></td>
+          <td>
+            <input type="text" id="school" placeholder="Your college name">
+            <div id="errSchool"></div>
+          </td>
+        </tr>
+
+        <!-- Teacher fields -->
+        <tr id="rowInstitution">
+          <td align="right"><b>Institution</b></td>
+          <td>
+            <input type="text" id="institution" placeholder="School/College">
+            <div id="errInstitution"></div>
+          </td>
+        </tr>
+
+        <tr id="rowSubject">
+          <td align="right"><b>Subject</b></td>
+          <td>
+            <input type="text" id="subject" placeholder="e.g., Maths">
+            <div id="errSubject"></div>
+          </td>
+        </tr>
+
+        <!-- Admin fields -->
+        <tr id="rowDept">
+          <td align="right"><b>Department</b></td>
+          <td>
+            <select id="department">
+              <option value="">Select</option>
+              <option>IT</option>
+              <option>HR</option>
+              <option>Finance</option>
+              <option>Operations</option>
+            </select>
+            <div id="errDept"></div>
+          </td>
+        </tr>
+
+        <tr id="rowCode">
+          <td align="right"><b>Admin Code</b></td>
+          <td>
+            <input type="text" id="adminCode" placeholder="ADM-2026">
+            <div id="errCode"></div>
+          </td>
+        </tr>
+
+        <tr>
+          <td></td>
+          <td>
+            <button type="submit" id="submitBtn" disabled>Register</button>
+            <button type="button" id="resetBtn">Reset</button>
+            <div id="formStatus"></div>
+          </td>
+        </tr>
+      </table>
+    </form>
+  </center>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function setError(id, msg) {
+      const el = $(id);
+      el.innerHTML = msg ? ('<font color="red">' + msg + '</font>') : '';
+    }
+
+    function setOkText(id, msg) {
+      const el = $(id);
+      el.innerHTML = msg ? ('<font color="green">' + msg + '</font>') : '';
+    }
+
+    function isEmailFormatValid(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+    }
+
+    function getDomain(email) {
+      const at = email.lastIndexOf("@");
+      return at >= 0 ? email.slice(at + 1).toLowerCase() : "";
+    }
+
+    function selectedSkillsCount() {
+      return [...document.querySelectorAll(".skill:checked")].length;
+    }
+
+    function getRoleRules(role) {
+      if (role === "student") {
+        return {
+          roleHint: "Student: Age ≥ 13, School/College required, password 8+ (upper+lower+digit).",
+          ageMin: 13,
+          skillsMin: 1,
+          allowedDomains: null,
+          required: { school: true, institution: false, subject: false, department: false, adminCode: false },
+          pw: { minLen: 8, upper: true, lower: true, digit: true, special: false }
+        };
+      }
+      if (role === "teacher") {
+        return {
+          roleHint: "Teacher: Age ≥ 18, Institution+Subject required, password 10+ incl special.",
+          ageMin: 18,
+          skillsMin: 2,
+          allowedDomains: null,
+          required: { school: false, institution: true, subject: true, department: false, adminCode: false },
+          pw: { minLen: 10, upper: true, lower: true, digit: true, special: true }
+        };
+      }
+      // admin
+      return {
+        roleHint: "Admin: Age ≥ 21, Dept+AdminCode required, email must be company.com, password 12+ strong.",
+        ageMin: 21,
+        skillsMin: 3,
+        allowedDomains: ["company.com", "admin.company.com"],
+        required: { school: false, institution: false, subject: false, department: true, adminCode: true },
+        pw: { minLen: 12, upper: true, lower: true, digit: true, special: true }
+      };
+    }
+
+    function applyRoleUI(rules) {
+      $("roleHint").innerHTML = "<i>" + rules.roleHint + "</i>";
+
+      $("rowSchool").hidden = !rules.required.school;
+      $("rowInstitution").hidden = !rules.required.institution;
+      $("rowSubject").hidden = !rules.required.subject;
+      $("rowDept").hidden = !rules.required.department;
+      $("rowCode").hidden = !rules.required.adminCode;
+
+      // Clear errors for hidden fields
+      if (!rules.required.school) setError("errSchool", "");
+      if (!rules.required.institution) setError("errInstitution", "");
+      if (!rules.required.subject) setError("errSubject", "");
+      if (!rules.required.department) setError("errDept", "");
+      if (!rules.required.adminCode) setError("errCode", "");
+
+      $("skillsHint").innerHTML = "<i>Minimum skills required: " + rules.skillsMin + "</i>";
+    }
+
+    function validatePassword(pw, rules) {
+      const fails = [];
+      if (pw.length < rules.minLen) fails.push(rules.minLen + "+ chars");
+      if (rules.upper && !/[A-Z]/.test(pw)) fails.push("uppercase");
+      if (rules.lower && !/[a-z]/.test(pw)) fails.push("lowercase");
+      if (rules.digit && !/\d/.test(pw)) fails.push("number");
+      if (rules.special && !/[^A-Za-z0-9]/.test(pw)) fails.push("special char");
+
+      return { ok: fails.length === 0, fails };
+    }
+
+    function validateAll() {
+      const role = $("role").value;
+      const rules = getRoleRules(role);
+
+      // Name
+      const name = $("name").value.trim();
+      const okName = name.length >= 3;
+      setError("errName", okName ? "" : "Name must be at least 3 characters.");
+
+      // Age
+      const ageVal = Number($("age").value);
+      const okAge = Number.isFinite(ageVal) && ageVal >= rules.ageMin && ageVal <= 120;
+      setError("errAge", okAge ? "" : ("Age must be between " + rules.ageMin + " and 120."));
+
+      // Email
+      const email = $("email").value.trim();
+      let okEmail = true;
+      if (!email) okEmail = false, setError("errEmail", "Email is required.");
+      else if (!isEmailFormatValid(email)) okEmail = false, setError("errEmail", "Enter a valid email format.");
+      else {
+        const domain = getDomain(email);
+        const domainOk = /^[a-z0-9.-]+\.[a-z]{2,}$/.test(domain);
+        if (!domainOk) okEmail = false, setError("errEmail", "Email domain looks invalid.");
+        else if (rules.allowedDomains && !rules.allowedDomains.includes(domain)) {
+          okEmail = false;
+          setError("errEmail", "Admin email must be: " + rules.allowedDomains.join(", "));
+        } else {
+          setError("errEmail", "");
+        }
+      }
+
+      // Password
+      const pw = $("password").value;
+      const pwCheck = validatePassword(pw, rules.pw);
+      $("passHint").innerHTML = "<i>Required: " +
+        [rules.pw.minLen + "+ chars", rules.pw.upper ? "uppercase" : "",
+         rules.pw.lower ? "lowercase" : "", rules.pw.digit ? "number" : "",
+         rules.pw.special ? "special char" : ""].filter(Boolean).join(", ") + "</i>";
+      const okPass = pw.length > 0 && pwCheck.ok;
+      setError("errPass", okPass ? "" : ("Password missing: " + pwCheck.fails.join(", ")));
+
+      // Confirm
+      const cpw = $("confirm").value;
+      const okConfirm = cpw.length > 0 && (pw === cpw);
+      setError("errConfirm", okConfirm ? "" : "Passwords do not match.");
+
+      // Skills
+      const skillsCount = selectedSkillsCount();
+      const okSkills = skillsCount >= rules.skillsMin;
+      setError("errSkills", okSkills ? "" : ("Select at least " + rules.skillsMin + " skill(s)."));
+
+      // Dynamic fields
+      let okDynamic = true;
+
+      if (rules.required.school) {
+        const v = $("school").value.trim();
+        const ok = v.length >= 2;
+        setError("errSchool", ok ? "" : "School/College is required.");
+        okDynamic = okDynamic && ok;
+      }
+
+      if (rules.required.institution) {
+        const v = $("institution").value.trim();
+        const ok = v.length >= 2;
+        setError("errInstitution", ok ? "" : "Institution is required.");
+        okDynamic = okDynamic && ok;
+      }
+
+      if (rules.required.subject) {
+        const v = $("subject").value.trim();
+        const ok = v.length >= 2;
+        setError("errSubject", ok ? "" : "Subject is required.");
+        okDynamic = okDynamic && ok;
+      }
+
+      if (rules.required.department) {
+        const v = $("department").value;
+        const ok = v.trim() !== "";
+        setError("errDept", ok ? "" : "Please select a department.");
+        okDynamic = okDynamic && ok;
+      }
+
+      if (rules.required.adminCode) {
+        const v = $("adminCode").value.trim();
+        const ok = /^ADM-\d{3,6}$/.test(v);
+        setError("errCode", ok ? "" : "Admin Code must look like ADM-2026.");
+        okDynamic = okDynamic && ok;
+      }
+
+      const allOk = okName && okAge && okEmail && okPass && okConfirm && okSkills && okDynamic;
+
+      $("submitBtn").disabled = !allOk;
+      $("formStatus").innerHTML = allOk
+        ? '<font color="green"><b>All validations passed. You can Register.</b></font>'
+        : '<font color="gray">Form is not valid yet.</font>';
+
+      return allOk;
+    }
+
+    // Events
+    const inputs = ["name","email","age","password","confirm","school","institution","subject","adminCode"];
+    inputs.forEach(id => $(id).addEventListener("input", validateAll));
+    $("department").addEventListener("change", validateAll);
+    document.querySelectorAll(".skill").forEach(cb => cb.addEventListener("change", validateAll));
+
+    $("role").addEventListener("change", () => {
+      const rules = getRoleRules($("role").value);
+      applyRoleUI(rules);
+      validateAll();
+    });
+
+    $("resetBtn").addEventListener("click", () => {
+      $("regForm").reset();
+      ["errName","errEmail","errAge","errPass","errConfirm","errSkills","errSchool","errInstitution","errSubject","errDept","errCode"]
+        .forEach(id => setError(id, ""));
+      $("formStatus").innerHTML = "";
+      const rules = getRoleRules($("role").value);
+      applyRoleUI(rules);
+      validateAll();
+    });
+
+    $("regForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!validateAll()) return;
+      alert("Registration successful! (Demo)");
+      $("resetBtn").click();
+    });
+
+    // Init
+    const rules0 = getRoleRules($("role").value);
+    applyRoleUI(rules0);
+    validateAll();
+  </script>
+</body>
+</html>

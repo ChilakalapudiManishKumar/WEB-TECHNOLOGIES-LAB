@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Exercise 5 - Multi-Stage Form Workflow Engine</title>
+  <style>
+    :root { font-family: system-ui, Arial, sans-serif; }
+    body { margin: 0; background:#f6f7fb; }
+    .page {
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 22px;
+      box-sizing: border-box;
+    }
+    .app {
+      width: 100%;
+      max-width: 980px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      box-shadow:0 10px 28px rgba(0,0,0,.08);
+      padding: 18px;
+    }
+    h2 { margin: 0 0 6px; }
+    .muted { color:#5b6573; margin: 0 0 14px; font-size: 14px; }
+
+    .progressWrap {
+      background:#eef2f7;
+      border-radius: 999px;
+      height: 12px;
+      overflow:hidden;
+      border: 1px solid #e5e7eb;
+      margin: 10px 0 16px;
+    }
+    .progressBar {
+      height: 100%;
+      width: 0%;
+      transition: width .25s ease;
+      background: #2563eb;
+    }
+    .stepsRow {
+      display:flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .stepPill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 12px;
+      color:#334155;
+    }
+    .stepPill.active {
+      background:#eef2ff;
+      border-color:#c7d2fe;
+      color:#1e40af;
+      font-weight: 800;
+    }
+    .stepPill.done {
+      background:#ecfdf3;
+      border-color:#bbf7d0;
+      color:#067647;
+      font-weight: 800;
+    }
+
+    .stage {
+      display:none;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+    }
+    .stage.active { display:block; }
+
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+
+    label { display:block; font-size: 13px; margin: 10px 0 6px; color:#111827; }
+    input, select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cfd4dc;
+      outline: none;
+      background: #fff;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color:#2563eb;
+      box-shadow:0 0 0 3px rgba(37,99,235,.15);
+    }
+    textarea { min-height: 88px; resize: vertical; }
+
+    .hint { font-size: 12px; color:#5b6573; margin-top: 6px; }
+    .error { font-size: 12px; color:#b42318; margin-top: 6px; display:none; }
+    .ok { font-size: 12px; color:#067647; margin-top: 6px; display:none; }
+
+    .invalid input, .invalid select, .invalid textarea { border-color:#b42318; background:#fff5f5; }
+    .valid input, .valid select, .valid textarea { border-color:#067647; background:#f0fff4; }
+
+    .actions {
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 14px;
+      justify-content: space-between;
+    }
+    .btnsLeft { display:flex; gap:10px; flex-wrap: wrap; }
+    button {
+      border:0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .primary { background:#2563eb; color:#fff; }
+    .ghost { background:#eef2ff; color:#1e40af; }
+    .danger { background:#fee2e2; color:#991b1b; }
+
+    .summary {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      white-space: pre-wrap;
+      font-size: 14px;
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="app">
+      <h2>Multi-Stage Client-Side Form Workflow</h2>
+      <p class="muted">
+        4 stages. You can’t proceed until the current stage is valid. Inputs are stored temporarily in JavaScript variables.
+      </p>
+
+      <div class="stepsRow">
+        <span class="stepPill" id="pill1">1) Account</span>
+        <span class="stepPill" id="pill2">2) Personal</span>
+        <span class="stepPill" id="pill3">3) Address</span>
+        <span class="stepPill" id="pill4">4) Review</span>
+      </div>
+
+      <div class="progressWrap">
+        <div class="progressBar" id="progressBar"></div>
+      </div>
+
+      <form id="wizardForm" novalidate>
+        <!-- Stage 1 -->
+        <section class="stage" id="stage1">
+          <h3 style="margin:0 0 6px;">Stage 1: Account</h3>
+          <div class="muted">Rules: Username 3-15, valid email, strong password, confirm match.</div>
+
+          <div class="grid">
+            <div id="w_user">
+              <label for="username">Username</label>
+              <input id="username" type="text" placeholder="3 to 15 chars">
+              <div class="error" id="e_username"></div>
+            </div>
+
+            <div id="w_email">
+              <label for="email">Email</label>
+              <input id="email" type="email" placeholder="name@example.com">
+              <div class="error" id="e_email"></div>
+            </div>
+
+            <div id="w_pass">
+              <label for="password">Password</label>
+              <input id="password" type="password" placeholder="8+ chars, upper+lower+digit">
+              <div class="hint" id="h_pass">Required: 8+ chars, uppercase, lowercase, number</div>
+              <div class="error" id="e_password"></div>
+            </div>
+
+            <div id="w_cpass">
+              <label for="confirm">Confirm Password</label>
+              <input id="confirm" type="password" placeholder="Re-type password">
+              <div class="error" id="e_confirm"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Stage 2 -->
+        <section class="stage" id="stage2">
+          <h3 style="margin:0 0 6px;">Stage 2: Personal</h3>
+          <div class="muted">Rules: Full name 3+, age 18+, phone 10 digits, role required.</div>
+
+          <div class="grid">
+            <div id="w_fullname">
+              <label for="fullname">Full Name</label>
+              <input id="fullname" type="text" placeholder="Your name">
+              <div class="error" id="e_fullname"></div>
+            </div>
+
+            <div id="w_age">
+              <label for="age">Age</label>
+              <input id="age" type="number" placeholder="18" min="1">
+              <div class="error" id="e_age"></div>
+            </div>
+
+            <div id="w_phone">
+              <label for="phone">Phone</label>
+              <input id="phone" type="text" placeholder="10-digit number">
+              <div class="hint">Digits only (example: 9876543210)</div>
+              <div class="error" id="e_phone"></div>
+            </div>
+
+            <div id="w_role">
+              <label for="role">Role</label>
+              <select id="role">
+                <option value="">Select role</option>
+                <option>Student</option>
+                <option>Teacher</option>
+                <option>Admin</option>
+              </select>
+              <div class="error" id="e_role"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Stage 3 -->
+        <section class="stage" id="stage3">
+          <h3 style="margin:0 0 6px;">Stage 3: Address</h3>
+          <div class="muted">Rules: Address 10+, City required, PIN 6 digits (India), Terms must be checked.</div>
+
+          <div class="grid">
+            <div id="w_address" style="grid-column:1 / -1;">
+              <label for="address">Address</label>
+              <textarea id="address" placeholder="House no, street, area..."></textarea>
+              <div class="error" id="e_address"></div>
+            </div>
+
+            <div id="w_city">
+              <label for="city">City</label>
+              <input id="city" type="text" placeholder="City">
+              <div class="error" id="e_city"></div>
+            </div>
+
+            <div id="w_pin">
+              <label for="pin">PIN Code</label>
+              <input id="pin" type="text" placeholder="6 digits">
+              <div class="error" id="e_pin"></div>
+            </div>
+
+            <div id="w_terms" style="grid-column:1 / -1;">
+              <label style="display:flex; gap:10px; align-items:center;">
+                <input id="terms" type="checkbox" style="width:auto;">
+                I agree to the Terms & Conditions
+              </label>
+              <div class="error" id="e_terms"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Stage 4 -->
+        <section class="stage" id="stage4">
+          <h3 style="margin:0 0 6px;">Stage 4: Review</h3>
+          <div class="muted">Rules: Must confirm review checkbox before final submit.</div>
+
+          <div class="summary" id="reviewBox" style="display:block;"></div>
+
+          <div id="w_review">
+            <label style="display:flex; gap:10px; align-items:center; margin-top: 10px;">
+              <input id="confirmReview" type="checkbox" style="width:auto;">
+              I reviewed my information and confirm it is correct
+            </label>
+            <div class="error" id="e_confirmReview"></div>
+          </div>
+        </section>
+
+        <div class="actions">
+          <div class="btnsLeft">
+            <button type="button" class="ghost" id="prevBtn">Back</button>
+            <button type="button" class="primary" id="nextBtn">Next</button>
+            <button type="submit" class="primary" id="submitBtn" style="display:none;">Submit</button>
+          </div>
+          <button type="button" class="danger" id="resetBtn">Reset</button>
+        </div>
+
+        <div class="summary" id="finalBox"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ---------------------------------------------------------
+    // 6) Store user input temporarily in JS variables
+    // ---------------------------------------------------------
+    const formData = {
+      // stage1
+      username: "",
+      email: "",
+      password: "",
+      // stage2
+      fullname: "",
+      age: "",
+      phone: "",
+      role: "",
+      // stage3
+      address: "",
+      city: "",
+      pin: "",
+      terms: false,
+      // stage4
+      confirmReview: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    let currentStage = 1;
+    const totalStages = 4;
+
+    // ---------------------------------------------------------
+    // DOM helpers
+    // ---------------------------------------------------------
+    function setWrapState(wrapId, isValid, errId, msg) {
+      const wrap = $(wrapId);
+      const err = $(errId);
+      wrap.classList.remove("valid", "invalid");
+      err.style.display = "none";
+      err.textContent = "";
+
+      if (isValid === true) {
+        wrap.classList.add("valid");
+      } else if (isValid === false) {
+        wrap.classList.add("invalid");
+        err.textContent = msg || "Invalid";
+        err.style.display = "block";
+      }
+    }
+
+    function showStage(n) {
+      for (let i = 1; i <= totalStages; i++) {
+        $("stage" + i).classList.toggle("active", i === n);
+        const pill = $("pill" + i);
+        pill.classList.toggle("active", i === n);
+      }
+
+      // done pills (simple: any stage < current is "done")
+      for (let i = 1; i <= totalStages; i++) {
+        $("pill" + i).classList.toggle("done", i < n);
+      }
+
+      // buttons
+      $("prevBtn").disabled = (n === 1);
+      $("nextBtn").style.display = (n === totalStages) ? "none" : "inline-block";
+      $("submitBtn").style.display = (n === totalStages) ? "inline-block" : "none";
+
+      // progress bar
+      const pct = ((n - 1) / (totalStages - 1)) * 100; // stage1=0%, stage4=100%
+      $("progressBar").style.width = pct + "%";
+
+      if (n === 4) renderReview();
+    }
+
+    function syncToData() {
+      // stage1
+      formData.username = $("username").value.trim();
+      formData.email = $("email").value.trim();
+      formData.password = $("password").value;
+
+      // stage2
+      formData.fullname = $("fullname").value.trim();
+      formData.age = $("age").value.trim();
+      formData.phone = $("phone").value.trim();
+      formData.role = $("role").value;
+
+      // stage3
+      formData.address = $("address").value.trim();
+      formData.city = $("city").value.trim();
+      formData.pin = $("pin").value.trim();
+      formData.terms = $("terms").checked;
+
+      // stage4
+      formData.confirmReview = $("confirmReview").checked;
+    }
+
+    // ---------------------------------------------------------
+    // Stage validations (strict)
+    // ---------------------------------------------------------
+    function isEmailValid(v) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+    }
+
+    function passStrong(v) {
+      // 8+ with upper, lower, digit
+      return v.length >= 8 && /[A-Z]/.test(v) && /[a-z]/.test(v) && /\d/.test(v);
+    }
+
+    function validateStage1() {
+      syncToData();
+      let ok = true;
+
+      const u = formData.username;
+      const okU = u.length >= 3 && u.length <= 15;
+      setWrapState("w_user", okU, "e_username", "Username must be 3 to 15 characters.");
+      ok = ok && okU;
+
+      const em = formData.email;
+      const okE = isEmailValid(em);
+      setWrapState("w_email", okE, "e_email", "Enter a valid email address.");
+      ok = ok && okE;
+
+      const pw = formData.password;
+      const okP = passStrong(pw);
+      setWrapState("w_pass", okP, "e_password", "Password must be 8+ with uppercase, lowercase, and number.");
+      ok = ok && okP;
+
+      const cpw = $("confirm").value;
+      const okC = cpw.length > 0 && cpw === pw;
+      setWrapState("w_cpass", okC, "e_confirm", "Passwords must match.");
+      ok = ok && okC;
+
+      return ok;
+    }
+
+    function validateStage2() {
+      syncToData();
+      let ok = true;
+
+      const fn = formData.fullname;
+      const okF = fn.length >= 3;
+      setWrapState("w_fullname", okF, "e_fullname", "Full name must be at least 3 characters.");
+      ok = ok && okF;
+
+      const ageNum = Number(formData.age);
+      const okA = Number.isFinite(ageNum) && ageNum >= 18 && ageNum <= 120;
+      setWrapState("w_age", okA, "e_age", "Age must be 18 or above.");
+      ok = ok && okA;
+
+      const ph = formData.phone.replace(/\s+/g, "");
+      const okPh = /^\d{10}$/.test(ph);
+      setWrapState("w_phone", okPh, "e_phone", "Phone must be exactly 10 digits.");
+      ok = ok && okPh;
+
+      const r = formData.role;
+      const okR = r !== "";
+      setWrapState("w_role", okR, "e_role", "Please select a role.");
+      ok = ok && okR;
+
+      return ok;
+    }
+
+    function validateStage3() {
+      syncToData();
+      let ok = true;
+
+      const ad = formData.address;
+      const okAd = ad.length >= 10;
+      setWrapState("w_address", okAd, "e_address", "Address must be at least 10 characters.");
+      ok = ok && okAd;
+
+      const city = formData.city;
+      const okCity = city.length >= 2;
+      setWrapState("w_city", okCity, "e_city", "City is required (min 2 chars).");
+      ok = ok && okCity;
+
+      const pin = formData.pin.replace(/\s+/g, "");
+      const okPin = /^\d{6}$/.test(pin);
+      setWrapState("w_pin", okPin, "e_pin", "PIN must be exactly 6 digits.");
+      ok = ok && okPin;
+
+      const okTerms = formData.terms === true;
+      setWrapState("w_terms", okTerms, "e_terms", "You must agree to the terms.");
+      ok = ok && okTerms;
+
+      return ok;
+    }
+
+    function validateStage4() {
+      syncToData();
+      let ok = true;
+
+      const okRev = formData.confirmReview === true;
+      setWrapState("w_review", okRev, "e_confirmReview", "Please confirm you reviewed your information.");
+      ok = ok && okRev;
+
+      return ok;
+    }
+
+    function validateCurrentStage() {
+      if (currentStage === 1) return validateStage1();
+      if (currentStage === 2) return validateStage2();
+      if (currentStage === 3) return validateStage3();
+      if (currentStage === 4) return validateStage4();
+      return false;
+    }
+
+    // ---------------------------------------------------------
+    // Navigation control (Requirement 2/4/5)
+    // ---------------------------------------------------------
+    function goNext() {
+      const ok = validateCurrentStage();
+      if (!ok) return; // block navigation
+
+      if (currentStage < totalStages) {
+        currentStage++;
+        showStage(currentStage);
+      }
+    }
+
+    function goPrev() {
+      // Allow going back freely, but keep data stored
+      if (currentStage > 1) {
+        currentStage--;
+        showStage(currentStage);
+      }
+    }
+
+    // ---------------------------------------------------------
+    // Review rendering (Stage 4)
+    // ---------------------------------------------------------
+    function renderReview() {
+      syncToData();
+      const lines = [];
+      lines.push("Review your details:\n");
+      lines.push("Username: " + formData.username);
+      lines.push("Email: " + formData.email);
+      lines.push("");
+      lines.push("Full Name: " + formData.fullname);
+      lines.push("Age: " + formData.age);
+      lines.push("Phone: " + formData.phone);
+      lines.push("Role: " + formData.role);
+      lines.push("");
+      lines.push("Address: " + formData.address);
+      lines.push("City: " + formData.city);
+      lines.push("PIN: " + formData.pin);
+      lines.push("Agreed to Terms: " + (formData.terms ? "Yes" : "No"));
+
+      $("reviewBox").textContent = lines.join("\n");
+    }
+
+    // ---------------------------------------------------------
+    // Events: live validation on inputs (optional but helpful)
+    // ---------------------------------------------------------
+    const liveInputs = [
+      "username","email","password","confirm",
+      "fullname","age","phone","role",
+      "address","city","pin","terms",
+      "confirmReview"
+    ];
+
+    liveInputs.forEach(id => {
+      const el = $(id);
+      const evt = (el.type === "checkbox" || el.tagName === "SELECT") ? "change" : "input";
+
+      el.addEventListener(evt, () => {
+        // validate current stage only, for speed
+        validateCurrentStage();
+
+        // if currently on stage4, update review box on edits (if user goes back and returns)
+        if (currentStage === 4) renderReview();
+      });
+    });
+
+    // Buttons
+    $("nextBtn").addEventListener("click", goNext);
+    $("prevBtn").addEventListener("click", goPrev);
+
+    $("resetBtn").addEventListener("click", () => {
+      $("wizardForm").reset();
+      // clear wrap states
+      const wraps = [
+        ["w_user","e_username"],["w_email","e_email"],["w_pass","e_password"],["w_cpass","e_confirm"],
+        ["w_fullname","e_fullname"],["w_age","e_age"],["w_phone","e_phone"],["w_role","e_role"],
+        ["w_address","e_address"],["w_city","e_city"],["w_pin","e_pin"],["w_terms","e_terms"],
+        ["w_review","e_confirmReview"]
+      ];
+      wraps.forEach(([w,e]) => setWrapState(w, null, e, ""));
+      $("finalBox").style.display = "none";
+      $("finalBox").textContent = "";
+
+      // reset data
+      Object.keys(formData).forEach(k => formData[k] = (k === "terms" || k === "confirmReview") ? false : "");
+
+      currentStage = 1;
+      showStage(currentStage);
+    });
+
+    // Final submit (Requirement 5)
+    $("wizardForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      // Validate all stages strictly before submission
+      const ok1 = validateStage1();
+      const ok2 = validateStage2();
+      const ok3 = validateStage3();
+      const ok4 = validateStage4();
+
+      if (!(ok1 && ok2 && ok3 && ok4)) {
+        // Jump to first failing stage
+        if (!ok1) currentStage = 1;
+        else if (!ok2) currentStage = 2;
+        else if (!ok3) currentStage = 3;
+        else currentStage = 4;
+
+        showStage(currentStage);
+        return;
+      }
+
+      syncToData();
+
+      const finalLines = [];
+      finalLines.push("✅ Submitted Successfully!\n");
+      finalLines.push("Stored data (temporary JS object):");
+      finalLines.push(JSON.stringify(formData, null, 2));
+
+      $("finalBox").style.display = "block";
+      $("finalBox").textContent = finalLines.join("\n");
+
+      // Optional: lock form after submit
+      // [...document.querySelectorAll("input, select, textarea, button")].forEach(el => el.disabled = true);
+    });
+
+    // Init
+    showStage(currentStage);
+    validateCurrentStage();
+  </script>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Exercise 2 - Intelligent Shopping Cart</title>
+  <style>
+    :root { font-family: system-ui, Arial, sans-serif; }
+    body { margin: 0; background: #f6f7fb; }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      box-sizing: border-box;
+    }
+    .app {
+      width: 100%;
+      max-width: 980px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.08);
+      padding: 18px;
+    }
+    h2 { margin: 0 0 6px; }
+    .muted { color: #5b6573; margin: 0 0 14px; font-size: 14px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .card h3 { margin: 0 0 10px; font-size: 16px; }
+
+    label { display: block; font-size: 13px; margin: 10px 0 6px; color: #111827; }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cfd4dc;
+      border-radius: 10px;
+      outline: none;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    input:focus, select:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row3 { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 10px; }
+    @media (max-width: 520px) {
+      .row2, .row3 { grid-template-columns: 1fr; }
+    }
+
+    .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btnPrimary { background: #eb7b25; color: #fff; }
+    .btnGhost { background: #eef2ff; color: #eb7b25; }
+    .btnDanger { background: #fee2e2; color: #eb7b25; }
+    button:active { transform: translateY(1px); }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: #334155;
+    }
+    .msg { margin-top: 10px; font-size: 13px; }
+    .ok { color: #067647; }
+    .bad { color: #b42318; }
+    .note { color: #475569; }
+
+    table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 12px; }
+    th, td { padding: 10px 10px; border-bottom: 1px solid #eef2f7; text-align: left; }
+    th { background: #f8fafc; font-size: 13px; color: #334155; }
+    tr:last-child td { border-bottom: 0; }
+    .qtyBox { display: inline-flex; align-items: center; gap: 8px; }
+    .qtyBtn {
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .qtyBtn:hover { background: #e2e8f0; }
+    .removeBtn {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .removeBtn:hover { background: #fee2e2; }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
+
+    .billLine { display:flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+    .billLine:last-child { border-bottom: 0; }
+    .billLabel { color: #111827; }
+    .billVal { font-weight: 800; }
+    .disc { color: #b42318; font-weight: 700; }
+
+    .topBar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="app">
+      <div class="topBar">
+        <div>
+          <h2>Intelligent Shopping Cart</h2>
+          <p class="muted">Bulk + category + time-of-day + coupon discounts. Updates live without reload.</p>
+        </div>
+        <span class="pill" id="timePill">Time: --</span>
+      </div>
+
+      <div class="grid">
+        <!-- Add product -->
+        <div class="card">
+          <h3>Add Product</h3>
+          <form id="addForm">
+            <label for="pName">Name</label>
+            <input id="pName" type="text" placeholder="e.g., Rice" required>
+
+            <label for="pCategory">Category</label>
+            <select id="pCategory" required>
+              <option value="Grocery">Grocery</option>
+              <option value="Electronics">Electronics</option>
+              <option value="Fashion">Fashion</option>
+              <option value="Books">Books</option>
+            </select>
+
+            <div class="row2">
+              <div>
+                <label for="pPrice">Price (₹)</label>
+                <input id="pPrice" type="number" min="1" step="0.01" placeholder="e.g., 299" required>
+              </div>
+              <div>
+                <label for="pQty">Qty</label>
+                <input id="pQty" type="number" min="1" step="1" value="1" required>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btnPrimary" type="submit">Add to Cart</button>
+              <button class="btnDanger" type="button" id="clearBtn">Clear Cart</button>
+            </div>
+
+            <div class="msg note">
+              Rules:
+              <ul style="margin:8px 0 0; padding-left:18px;">
+                <li><b>Bulk:</b> 10+ items → 10% off cart</li>
+                <li><b>Fashion:</b> 3+ fashion qty → 15% off fashion subtotal</li>
+                <li><b>Electronics:</b> electronics subtotal ≥ ₹5000 → 5% off electronics subtotal</li>
+                <li><b>Happy Hours:</b> 2PM–4PM → 3% off cart</li>
+              </ul>
+            </div>
+          </form>
+        </div>
+
+        <!-- Coupon -->
+        <div class="card">
+          <h3>Coupon</h3>
+          <label for="coupon">Enter Coupon</label>
+          <input id="coupon" type="text" placeholder="Try: SAVE10, ELEC5, NIGHT7, FLAT50">
+
+          <div class="actions">
+            <button class="btnPrimary" type="button" id="applyCouponBtn">Apply</button>
+            <button class="btnGhost" type="button" id="removeCouponBtn">Remove</button>
+          </div>
+
+          <div class="msg" id="couponMsg"></div>
+
+          <div class="msg note">
+            Coupon meanings:
+            <ul style="margin:8px 0 0; padding-left:18px;">
+              <li><b>SAVE10</b> → 10% off entire cart</li>
+              <li><b>ELEC5</b> → 5% off electronics subtotal</li>
+              <li><b>NIGHT7</b> → 7% off cart only 8PM–6AM</li>
+              <li><b>FLAT50</b> → ₹50 off if subtotal ≥ ₹500</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top:14px;">
+        <!-- Cart table -->
+        <div class="card">
+          <h3>Cart Items</h3>
+          <div id="cartView"></div>
+        </div>
+
+        <!-- Bill -->
+        <div class="card">
+          <h3>Bill Summary</h3>
+          <div id="billView"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -----------------------------
+    // 1) Products array (cart)
+    // -----------------------------
+    let cart = [
+      { id: 1, name: "Notebook", category: "Books", price: 120, qty: 1 },
+      { id: 2, name: "T-Shirt", category: "Fashion", price: 499, qty: 2 }
+    ];
+    let nextId = 3;
+
+    let appliedCoupon = null; // { code, type, value, min? }
+
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n) => "₹" + Number(n).toFixed(2);
+
+    // -----------------------------
+    // 2) Add/Remove/Update Qty
+    // -----------------------------
+    function addToCart(name, category, price, qty) {
+      const keyName = name.trim().toLowerCase();
+      const existing = cart.find(p =>
+        p.name.trim().toLowerCase() === keyName && p.category === category
+      );
+      if (existing) existing.qty += qty;
+      else cart.push({ id: nextId++, name: name.trim(), category, price, qty });
+      renderAll();
+    }
+
+    function removeItem(id) {
+      cart = cart.filter(p => p.id !== id);
+      renderAll();
+    }
+
+    function updateQty(id, newQty) {
+      const item = cart.find(p => p.id === id);
+      if (!item) return;
+      item.qty = newQty;
+      if (item.qty <= 0) removeItem(id);
+      else renderAll();
+    }
+
+    // -----------------------------
+    // 3) Bulk & Category discounts
+    // -----------------------------
+    function calcDiscounts(subtotal) {
+      const lines = [];
+
+      const totalQty = cart.reduce((sum, p) => sum + p.qty, 0);
+      if (totalQty >= 10) lines.push({ label: "Bulk Discount (10% for 10+ items)", amount: subtotal * 0.10 });
+
+      const fashionSubtotal = cart.filter(p => p.category === "Fashion")
+        .reduce((sum, p) => sum + p.price * p.qty, 0);
+      const fashionQty = cart.filter(p => p.category === "Fashion")
+        .reduce((sum, p) => sum + p.qty, 0);
+      if (fashionQty >= 3 && fashionSubtotal > 0) {
+        lines.push({ label: "Fashion Discount (15% for 3+ fashion items)", amount: fashionSubtotal * 0.15 });
+      }
+
+      const elecSubtotal = cart.filter(p => p.category === "Electronics")
+        .reduce((sum, p) => sum + p.price * p.qty, 0);
+      if (elecSubtotal >= 5000) {
+        lines.push({ label: "Electronics Discount (5% over ₹5000)", amount: elecSubtotal * 0.05 });
+      }
+
+      return lines;
+    }
+
+    // -----------------------------
+    // 4) Coupon parsing + validation
+    // -----------------------------
+    function parseCoupon(input) {
+      const code = (input || "")
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "");
+
+      if (!code) return { ok: false, msg: "Enter a coupon code." };
+      if (!/^[A-Z0-9]{4,10}$/.test(code)) return { ok: false, msg: "Invalid format (4-10 letters/numbers)." };
+
+      if (code === "SAVE10") return { ok: true, coupon: { code, type: "PERCENT_CART", value: 10 } };
+      if (code === "ELEC5")  return { ok: true, coupon: { code, type: "PERCENT_ELEC", value: 5 } };
+      if (code === "NIGHT7") return { ok: true, coupon: { code, type: "NIGHT_PERCENT_CART", value: 7 } };
+      if (code === "FLAT50") return { ok: true, coupon: { code, type: "FLAT_CART_MIN", value: 50, min: 500 } };
+
+      return { ok: false, msg: "Unknown coupon. Try: SAVE10, ELEC5, NIGHT7, FLAT50" };
+    }
+
+    // -----------------------------
+    // 5) Apply multiple discounts + time-of-day
+    // -----------------------------
+    function isNightWindow() {
+      const h = new Date().getHours();
+      return (h >= 20 || h < 6);
+    }
+
+    function calcCouponDiscount(subtotal) {
+      if (!appliedCoupon) return null;
+      const c = appliedCoupon;
+
+      const elecSubtotal = cart.filter(p => p.category === "Electronics")
+        .reduce((sum, p) => sum + p.price * p.qty, 0);
+
+      if (c.type === "PERCENT_CART") {
+        return { label: `Coupon ${c.code} (${c.value}% off cart)`, amount: subtotal * (c.value / 100) };
+      }
+      if (c.type === "PERCENT_ELEC") {
+        if (elecSubtotal <= 0) return { label: `Coupon ${c.code} (no electronics in cart)`, amount: 0 };
+        return { label: `Coupon ${c.code} (${c.value}% off electronics)`, amount: elecSubtotal * (c.value / 100) };
+      }
+      if (c.type === "NIGHT_PERCENT_CART") {
+        if (!isNightWindow()) return { label: `Coupon ${c.code} (valid only 8PM–6AM)`, amount: 0 };
+        return { label: `Coupon ${c.code} (${c.value}% off cart - night)`, amount: subtotal * (c.value / 100) };
+      }
+      if (c.type === "FLAT_CART_MIN") {
+        if (subtotal < c.min) return { label: `Coupon ${c.code} (needs subtotal ≥ ${fmt(c.min)})`, amount: 0 };
+        return { label: `Coupon ${c.code} (flat ${fmt(c.value)} off)`, amount: c.value };
+      }
+      return null;
+    }
+
+    function calcTimeDiscount(subtotal) {
+      const h = new Date().getHours();
+      if (h >= 14 && h < 16) return { label: "Happy Hours (3% off 2PM–4PM)", amount: subtotal * 0.03 };
+      return null;
+    }
+
+    function computeBill() {
+      const subtotal = cart.reduce((sum, p) => sum + (p.price * p.qty), 0);
+
+      const discounts = [];
+      discounts.push(...calcDiscounts(subtotal));
+
+      const tDisc = calcTimeDiscount(subtotal);
+      if (tDisc) discounts.push(tDisc);
+
+      const cDisc = calcCouponDiscount(subtotal);
+      if (cDisc) discounts.push(cDisc);
+
+      const totalDiscount = discounts.reduce((sum, d) => sum + d.amount, 0);
+      const total = Math.max(0, subtotal - totalDiscount);
+
+      return { subtotal, discounts, totalDiscount, total };
+    }
+
+    // -----------------------------
+    // 6) Real-time DOM updates
+    // -----------------------------
+    function renderCart() {
+      if (cart.length === 0) {
+        $("cartView").innerHTML = "<p class='muted'><b>Cart is empty.</b></p>";
+        return;
+      }
+
+      let html = "<table>";
+      html += "<tr><th>Name</th><th>Category</th><th>Price</th><th>Qty</th><th>Line Total</th><th></th></tr>";
+
+      for (const item of cart) {
+        const line = item.price * item.qty;
+        html += "<tr>";
+        html += "<td><b>" + item.name + "</b></td>";
+        html += "<td>" + item.category + "</td>";
+        html += "<td>" + fmt(item.price) + "</td>";
+
+        html += "<td>";
+        html += "<span class='qtyBox'>";
+        html += "<button class='qtyBtn' type='button' onclick='decQty(" + item.id + ")'>-</button>";
+        html += "<b>" + item.qty + "</b>";
+        html += "<button class='qtyBtn' type='button' onclick='incQty(" + item.id + ")'>+</button>";
+        html += "</span>";
+        html += "</td>";
+
+        html += "<td><b>" + fmt(line) + "</b></td>";
+        html += "<td><button class='removeBtn' type='button' onclick='removeItem(" + item.id + ")'>Remove</button></td>";
+        html += "</tr>";
+      }
+
+      html += "</table>";
+      $("cartView").innerHTML = html;
+    }
+
+    function renderBill() {
+      const bill = computeBill();
+
+      let html = "";
+      html += "<div class='billLine'><span class='billLabel'>Subtotal</span><span class='billVal'>" + fmt(bill.subtotal) + "</span></div>";
+
+      if (bill.discounts.length > 0) {
+        for (const d of bill.discounts) {
+          html += "<div class='billLine'><span class='billLabel'>- " + d.label + "</span><span class='disc'>-" + fmt(d.amount) + "</span></div>";
+        }
+      } else {
+        html += "<div class='billLine'><span class='billLabel'><i>No discounts applied</i></span><span class='billVal'>—</span></div>";
+      }
+
+      html += "<div class='billLine'><span class='billLabel'><b>Total Discount</b></span><span class='disc'><b>-" + fmt(bill.totalDiscount) + "</b></span></div>";
+      html += "<div class='billLine'><span class='billLabel'><b>Payable Total</b></span><span class='billVal'><b>" + fmt(bill.total) + "</b></span></div>";
+
+      $("billView").innerHTML = html;
+
+      const now = new Date();
+      $("timePill").textContent = "Time: " + now.toLocaleString();
+    }
+
+    function renderAll() {
+      renderCart();
+      renderBill();
+    }
+
+    // Global for onclick
+    window.removeItem = removeItem;
+    window.incQty = (id) => {
+      const item = cart.find(p => p.id === id);
+      if (!item) return;
+      updateQty(id, item.qty + 1);
+    };
+    window.decQty = (id) => {
+      const item = cart.find(p => p.id === id);
+      if (!item) return;
+      updateQty(id, item.qty - 1);
+    };
+
+    // Events
+    $("addForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = $("pName").value;
+      const category = $("pCategory").value;
+      const price = Number($("pPrice").value);
+      const qty = Number($("pQty").value);
+
+      if (!name.trim()) return alert("Enter product name.");
+      if (!Number.isFinite(price) || price <= 0) return alert("Enter valid price.");
+      if (!Number.isFinite(qty) || qty <= 0) return alert("Enter valid quantity.");
+
+      addToCart(name, category, price, qty);
+
+      $("pName").value = "";
+      $("pPrice").value = "";
+      $("pQty").value = 1;
+    });
+
+    $("clearBtn").addEventListener("click", () => {
+      cart = [];
+      appliedCoupon = null;
+      $("coupon").value = "";
+      $("couponMsg").innerHTML = "<span class='note'>Cart cleared.</span>";
+      renderAll();
+    });
+
+    $("applyCouponBtn").addEventListener("click", () => {
+      const parsed = parseCoupon($("coupon").value);
+
+      if (!parsed.ok) {
+        appliedCoupon = null;
+        $("couponMsg").innerHTML = "<span class='bad'><b>" + parsed.msg + "</b></span>";
+      } else {
+        appliedCoupon = parsed.coupon;
+        $("couponMsg").innerHTML = "<span class='ok'><b>Applied:</b> " + appliedCoupon.code + "</span>";
+      }
+      renderAll();
+    });
+
+    $("removeCouponBtn").addEventListener("click", () => {
+      appliedCoupon = null;
+      $("couponMsg").innerHTML = "<span class='note'>Coupon removed.</span>";
+      renderAll();
+    });
+
+    // Real-time update: time-based discounts depend on clock
+    setInterval(() => renderBill(), 1000);
+
+    // Init
+    renderAll();
+  </script>
+</body>
+</html>

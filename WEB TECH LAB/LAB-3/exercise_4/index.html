@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Exercise 4 - Real-Time User Activity Monitor</title>
+  <style>
+    :root { font-family: system-ui, Arial, sans-serif; }
+    body { margin: 0; background:#f6f7fb; }
+    .page {
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 22px;
+      box-sizing: border-box;
+    }
+    .app {
+      width: 100%;
+      max-width: 1000px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      box-shadow:0 10px 28px rgba(0,0,0,.08);
+      padding: 18px;
+    }
+    h2 { margin: 0 0 6px; }
+    .muted { color:#5b6573; margin: 0 0 14px; font-size: 14px; }
+
+    .grid { display:grid; grid-template-columns: 1.1fr .9fr; gap: 14px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:14px;
+      background:#fff;
+    }
+    .card h3 { margin: 0 0 10px; font-size: 16px; }
+
+    .play {
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 14px;
+      background: #f8fafc;
+    }
+    .row2 { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 520px) { .row2 { grid-template-columns: 1fr; } }
+
+    input, textarea, button {
+      font: inherit;
+    }
+    input, textarea {
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #cfd4dc;
+      outline:none;
+      background:#fff;
+    }
+    input:focus, textarea:focus { border-color:#2563eb; box-shadow:0 0 0 3px rgba(37,99,235,.15); }
+
+    .actions { display:flex; gap:10px; flex-wrap: wrap; margin-top: 12px; }
+    button {
+      border:0;
+      border-radius:12px;
+      padding:10px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary { background:#2563eb; color:#fff; }
+    .ghost { background:#eef2ff; color:#1e40af; }
+    .danger { background:#fee2e2; color:#991b1b; }
+    .pill {
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background:#f1f5f9;
+      border:1px solid #e2e8f0;
+      font-size: 12px;
+      color:#334155;
+    }
+    .warn {
+      background:#fff7ed;
+      border-color:#fdba74;
+      color:#9a3412;
+      font-weight: 700;
+    }
+
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding: 10px; border-bottom: 1px solid #eef2f7; text-align:left; vertical-align: top; }
+    th { background:#f8fafc; color:#334155; font-size: 13px; position: sticky; top: 0; }
+    .logBox { max-height: 430px; overflow:auto; border:1px solid #e5e7eb; border-radius: 12px; }
+
+    .small { font-size: 12px; color:#5b6573; }
+    code { background:#f1f5f9; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div class="app">
+      <h2>Real-Time User Activity Monitor</h2>
+      <p class="muted">
+        Tracks <b>clicks</b>, <b>key presses</b>, and <b>focus changes</b>. Logs both <b>capturing</b> and <b>bubbling</b>
+        phases to show event propagation.
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <h3>Play Area (generate events here)</h3>
+
+          <div class="play" id="playArea">
+            <div class="row2">
+              <div>
+                <div class="small">Click inside this area. Try clicking nested elements.</div>
+                <button type="button" class="primary" id="btnA">Button A</button>
+                <button type="button" class="ghost" id="btnB">Button B</button>
+                <div style="margin-top:10px;">
+                  <a href="#" id="demoLink">Demo Link (prevented)</a>
+                </div>
+              </div>
+
+              <div>
+                <div class="small">Type something (key presses are tracked)</div>
+                <input id="demoInput" placeholder="Type here..." />
+                <div style="margin-top:10px;" class="small">Focus changes are tracked (focusin/focusout bubble)</div>
+                <textarea id="demoText" placeholder="Click to focus, then click outside..."></textarea>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <span class="pill" id="liveStats">Stats: --</span>
+              <span class="pill" id="warnPill">Status: Normal</span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="danger" id="resetBtn">Reset Log</button>
+            <button type="button" class="ghost" id="exportBtn">Export Log (Text)</button>
+          </div>
+
+          <div class="small" style="margin-top:10px;">
+            Suspicious thresholds (demo):
+            <ul style="margin:6px 0 0; padding-left:18px;">
+              <li><b>Clicks:</b> &gt; 12 within 5 seconds</li>
+              <li><b>Key presses:</b> &gt; 35 within 10 seconds</li>
+              <li><b>Focus changes:</b> &gt; 10 within 10 seconds</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Activity Log</h3>
+          <div class="small" style="margin-bottom:8px;">
+            Each activity stored as an object: <code>{type, phase, target, currentTarget, time, ...}</code>
+          </div>
+
+          <div class="logBox">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Phase</th>
+                  <th>Target</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="logBody"></tbody>
+            </table>
+          </div>
+
+          <div class="small" style="margin-top:10px;">
+            Tip: Capturing is logged from a listener with <code>{capture:true}</code> and bubbling from default listeners.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------------------------------------
+    // 2) Store each activity in an array of objects
+    // ------------------------------------------------------------
+    const activityLog = []; // array of objects
+
+    const $ = (id) => document.getElementById(id);
+
+    // For suspicious thresholds
+    const thresholds = {
+      clicks: { limit: 12, windowMs: 5000 },     // >12 clicks in 5s
+      keys:   { limit: 35, windowMs: 10000 },    // >35 keys in 10s
+      focus:  { limit: 10, windowMs: 10000 }     // >10 focus changes in 10s
+    };
+
+    // We'll keep recent timestamps for sliding-window counting
+    const recent = {
+      clicks: [],
+      keys: [],
+      focus: []
+    };
+
+    // ------------------------------------------------------------
+    // Helpers
+    // ------------------------------------------------------------
+    function nowISO() {
+      const d = new Date();
+      return d.toLocaleTimeString() + "." + String(d.getMilliseconds()).padStart(3, "0");
+    }
+
+    function cssPath(el) {
+      if (!el || el === document) return "document";
+      if (el === window) return "window";
+      if (!(el instanceof Element)) return String(el);
+
+      const id = el.id ? ("#" + el.id) : "";
+      const cls = el.className && typeof el.className === "string"
+        ? "." + el.className.trim().split(/\s+/).slice(0,2).join(".")
+        : "";
+      return (el.tagName.toLowerCase() + id + cls);
+    }
+
+    function phaseName(e) {
+      // 1 = capturing, 2 = at target, 3 = bubbling
+      if (e.eventPhase === 1) return "capturing";
+      if (e.eventPhase === 2) return "at-target";
+      if (e.eventPhase === 3) return "bubbling";
+      return "unknown";
+    }
+
+    function pushRecent(bucket, tMs, windowMs) {
+      bucket.push(tMs);
+      const cutoff = tMs - windowMs;
+      while (bucket.length && bucket[0] < cutoff) bucket.shift();
+      return bucket.length;
+    }
+
+    function setWarning(isWarn, msg) {
+      const pill = $("warnPill");
+      pill.classList.toggle("warn", isWarn);
+      pill.textContent = isWarn ? ("⚠ " + msg) : "Status: Normal";
+    }
+
+    function updateStats() {
+      const clickCount = recent.clicks.length;
+      const keyCount   = recent.keys.length;
+      const focusCount = recent.focus.length;
+      $("liveStats").textContent = `Stats: Clicks(5s)=${clickCount}, Keys(10s)=${keyCount}, Focus(10s)=${focusCount}`;
+    }
+
+    // ------------------------------------------------------------
+    // 4) Dynamically display the activity log using the DOM
+    // ------------------------------------------------------------
+    function renderLog() {
+      const tbody = $("logBody");
+      tbody.innerHTML = "";
+
+      // show latest first (optional)
+      const entries = [...activityLog].slice(-200).reverse(); // keep UI light
+
+      for (let i = 0; i < entries.length; i++) {
+        const a = entries[i];
+
+        const tr = document.createElement("tr");
+
+        const tdN = document.createElement("td");
+        tdN.textContent = String(activityLog.length - i); // original index
+        tr.appendChild(tdN);
+
+        const tdT = document.createElement("td");
+        tdT.textContent = a.time;
+        tr.appendChild(tdT);
+
+        const tdType = document.createElement("td");
+        tdType.textContent = a.type;
+        tr.appendChild(tdType);
+
+        const tdPhase = document.createElement("td");
+        tdPhase.textContent = a.phase;
+        tr.appendChild(tdPhase);
+
+        const tdTarget = document.createElement("td");
+        tdTarget.textContent = a.target;
+        tr.appendChild(tdTarget);
+
+        const tdDetails = document.createElement("td");
+        tdDetails.textContent = a.details || "";
+        tr.appendChild(tdDetails);
+
+        tbody.appendChild(tr);
+      }
+    }
+
+    // ------------------------------------------------------------
+    // Central logger used by all listeners
+    // ------------------------------------------------------------
+    function logActivity(e, listenerPhaseLabel) {
+      const time = nowISO();
+
+      // details per event type
+      let details = "";
+      if (e.type === "click") {
+        details = `x=${e.clientX}, y=${e.clientY}`;
+      } else if (e.type === "keydown") {
+        details = `key="${e.key}" code=${e.code}`;
+      } else if (e.type === "focusin" || e.type === "focusout") {
+        details = "";
+      }
+
+      const entry = {
+        time,
+        type: e.type,
+        phase: listenerPhaseLabel + " (" + phaseName(e) + ")",
+        target: cssPath(e.target),
+        currentTarget: cssPath(e.currentTarget),
+        isTrusted: e.isTrusted,
+        details
+      };
+
+      activityLog.push(entry);
+
+      // update suspicious counters
+      const tMs = Date.now();
+      if (e.type === "click") {
+        const n = pushRecent(recent.clicks, tMs, thresholds.clicks.windowMs);
+        if (n > thresholds.clicks.limit) setWarning(true, "Too many clicks detected!");
+      } else if (e.type === "keydown") {
+        const n = pushRecent(recent.keys, tMs, thresholds.keys.windowMs);
+        if (n > thresholds.keys.limit) setWarning(true, "Too many key presses detected!");
+      } else if (e.type === "focusin" || e.type === "focusout") {
+        const n = pushRecent(recent.focus, tMs, thresholds.focus.windowMs);
+        if (n > thresholds.focus.limit) setWarning(true, "Too many focus changes detected!");
+      }
+
+      updateStats();
+      renderLog();
+    }
+
+    // ------------------------------------------------------------
+    // 1) Track clicks, key presses, focus events using listeners
+    // 3) Use bubbling and capturing
+    // ------------------------------------------------------------
+    function attachListeners() {
+      // Click: capturing + bubbling
+      document.addEventListener("click", (e) => logActivity(e, "CAPTURE"), { capture: true });
+      document.addEventListener("click", (e) => logActivity(e, "BUBBLE"));
+
+      // Key presses: capturing + bubbling (use keydown for real-time)
+      document.addEventListener("keydown", (e) => logActivity(e, "CAPTURE"), { capture: true });
+      document.addEventListener("keydown", (e) => logActivity(e, "BUBBLE"));
+
+      // Focus: focus doesn't bubble, so use focusin/focusout which bubble
+      document.addEventListener("focusin", (e) => logActivity(e, "CAPTURE"), { capture: true });
+      document.addEventListener("focusin", (e) => logActivity(e, "BUBBLE"));
+
+      document.addEventListener("focusout", (e) => logActivity(e, "CAPTURE"), { capture: true });
+      document.addEventListener("focusout", (e) => logActivity(e, "BUBBLE"));
+    }
+
+    // Prevent link navigation (so user stays on page)
+    $("demoLink").addEventListener("click", (e) => e.preventDefault());
+
+    // ------------------------------------------------------------
+    // 6) Reset and export as formatted text
+    // ------------------------------------------------------------
+    function exportLogText() {
+      if (activityLog.length === 0) return "Activity Log is empty.";
+
+      const lines = [];
+      lines.push("=== User Activity Log Export ===");
+      lines.push("Export Time: " + new Date().toLocaleString());
+      lines.push("Total Events: " + activityLog.length);
+      lines.push("");
+
+      // Oldest first in export
+      activityLog.forEach((a, idx) => {
+        lines.push(
+          `${idx + 1}. [${a.time}] ${a.type} | ${a.phase} | target=${a.target} | currentTarget=${a.currentTarget}` +
+          (a.details ? ` | ${a.details}` : "")
+        );
+      });
+
+      return lines.join("\n");
+    }
+
+    function downloadText(filename, text) {
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    $("resetBtn").addEventListener("click", () => {
+      activityLog.length = 0;
+      recent.clicks.length = 0;
+      recent.keys.length = 0;
+      recent.focus.length = 0;
+      setWarning(false, "");
+      updateStats();
+      renderLog();
+    });
+
+    $("exportBtn").addEventListener("click", () => {
+      const text = exportLogText();
+      downloadText("activity-log.txt", text);
+    });
+
+    // Keep warning pill from staying forever: clear warning if activity calms down
+    setInterval(() => {
+      // If all are below/equal to limits, clear warning
+      const okClicks = recent.clicks.length <= thresholds.clicks.limit;
+      const okKeys   = recent.keys.length <= thresholds.keys.limit;
+      const okFocus  = recent.focus.length <= thresholds.focus.limit;
+
+      if (okClicks && okKeys && okFocus) setWarning(false, "");
+      updateStats();
+    }, 500);
+
+    // Init
+    attachListeners();
+    updateStats();
+    renderLog();
+  </script>
+</body>
+</html>

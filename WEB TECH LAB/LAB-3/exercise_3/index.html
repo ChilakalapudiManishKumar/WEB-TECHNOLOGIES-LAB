@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Exercise 3 - Dynamic Survey Builder</title>
+  <style>
+    :root { font-family: system-ui, Arial, sans-serif; }
+    body { margin: 0; background:#f6f7fb; }
+    .page {
+      min-height: 100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 22px;
+      box-sizing: border-box;
+    }
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background:#fff;
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      box-shadow:0 10px 28px rgba(0,0,0,.08);
+      padding: 18px;
+    }
+    h2 { margin: 0 0 6px; }
+    .muted { color:#5b6573; margin: 0 0 14px; font-size: 14px; }
+    .card {
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      padding:14px;
+      background:#fff;
+      margin-top: 12px;
+    }
+    .qTitle { font-weight: 800; margin: 0 0 8px; }
+    .req { color:#b42318; font-weight: 800; margin-left: 6px; }
+    label { display:block; margin: 8px 0; }
+    input[type="text"], textarea {
+      width:100%;
+      box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #cfd4dc;
+      outline:none;
+    }
+    textarea { min-height: 80px; resize: vertical; }
+    .hint { font-size: 12px; color:#5b6573; margin-top: 6px; }
+    .error { font-size: 12px; color:#b42318; margin-top: 6px; display:none; }
+    .ok { font-size: 12px; color:#067647; margin-top: 6px; display:none; }
+    .invalid input[type="text"], .invalid textarea { border-color:#b42318; background:#fff5f5; }
+    .valid input[type="text"], .valid textarea { border-color:#067647; background:#f0fff4; }
+    .actions { display:flex; gap:10px; flex-wrap: wrap; margin-top: 14px; align-items:center; }
+    button {
+      border:0; border-radius: 12px; padding: 10px 14px;
+      font-weight: 800; cursor: pointer;
+    }
+    .primary { background:#2563eb; color:#fff; }
+    .ghost { background:#eef2ff; color:#1e40af; }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .summary {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="app">
+      <h2>Dynamic Survey Builder</h2>
+      <p class="muted">
+        Questions are generated from a predefined structure (text, radio, checkbox). Mandatory checks, character limits,
+        and selection count validation happen before submit.
+      </p>
+
+      <form id="surveyForm" novalidate>
+        <div id="surveyRoot"></div>
+
+        <div class="actions">
+          <button class="primary" id="submitBtn" type="submit" disabled>Submit Survey</button>
+          <button class="ghost" id="resetBtn" type="button">Reset</button>
+          <span class="muted" id="formStatus">Complete all required answers to enable submit.</span>
+        </div>
+
+        <div class="summary" id="resultBox" style="display:none;"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------
+    // 1) Structure to store questions and types + rules
+    // -------------------------------------------------------
+    const questions = [
+      {
+        id: "q_name",
+        type: "text",
+        label: "Your Name",
+        required: true,
+        minLen: 3,
+        maxLen: 30,
+        placeholder: "Enter your full name"
+      },
+      {
+        id: "q_feedback",
+        type: "text",
+        label: "Feedback (max 120 chars)",
+        required: true,
+        minLen: 10,
+        maxLen: 120,
+        multiline: true,
+        placeholder: "Write your feedback..."
+      },
+      {
+        id: "q_role",
+        type: "radio",
+        label: "Your Role",
+        required: true,
+        options: ["Student", "Teacher", "Admin"]
+      },
+      {
+        id: "q_topics",
+        type: "checkbox",
+        label: "Topics you like (choose 1 to 3)",
+        required: true,
+        options: ["JavaScript", "HTML", "CSS", "Python", "C", "AI"],
+        minSelect: 1,
+        maxSelect: 3
+      },
+      {
+        id: "q_newsletter",
+        type: "radio",
+        label: "Subscribe to newsletter?",
+        required: false,
+        options: ["Yes", "No"]
+      }
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    // -------------------------------------------------------
+    // 2) Dynamically generate form fields based on type
+    // -------------------------------------------------------
+    function buildSurvey() {
+      const root = $("surveyRoot");
+      root.innerHTML = "";
+
+      for (const q of questions) {
+        const wrap = document.createElement("div");
+        wrap.className = "card";
+        wrap.id = "wrap_" + q.id;
+
+        // Title line
+        const title = document.createElement("div");
+        title.className = "qTitle";
+        title.textContent = q.label;
+
+        if (q.required) {
+          const req = document.createElement("span");
+          req.className = "req";
+          req.textContent = "*";
+          title.appendChild(req);
+        }
+        wrap.appendChild(title);
+
+        // Field rendering
+        if (q.type === "text") {
+          const inputId = q.id;
+
+          let field;
+          if (q.multiline) {
+            field = document.createElement("textarea");
+          } else {
+            field = document.createElement("input");
+            field.type = "text";
+          }
+
+          field.id = inputId;
+          field.placeholder = q.placeholder || "";
+          if (q.maxLen) field.maxLength = q.maxLen;
+
+          // live validate
+          field.addEventListener("input", () => validateAll());
+          field.addEventListener("blur", () => validateAll());
+
+          wrap.appendChild(field);
+
+          const hint = document.createElement("div");
+          hint.className = "hint";
+          hint.id = "hint_" + q.id;
+          hint.textContent = textHint(q);
+          wrap.appendChild(hint);
+
+        } else if (q.type === "radio") {
+          const groupName = q.id;
+
+          for (const opt of q.options) {
+            const lbl = document.createElement("label");
+            const r = document.createElement("input");
+            r.type = "radio";
+            r.name = groupName;
+            r.value = opt;
+
+            r.addEventListener("change", () => validateAll());
+
+            lbl.appendChild(r);
+            lbl.appendChild(document.createTextNode(" " + opt));
+            wrap.appendChild(lbl);
+          }
+
+          const hint = document.createElement("div");
+          hint.className = "hint";
+          hint.id = "hint_" + q.id;
+          hint.textContent = q.required ? "Select one option." : "Optional.";
+          wrap.appendChild(hint);
+
+        } else if (q.type === "checkbox") {
+          const groupName = q.id;
+
+          for (const opt of q.options) {
+            const lbl = document.createElement("label");
+            const c = document.createElement("input");
+            c.type = "checkbox";
+            c.name = groupName;
+            c.value = opt;
+
+            c.addEventListener("change", () => validateAll());
+
+            lbl.appendChild(c);
+            lbl.appendChild(document.createTextNode(" " + opt));
+            wrap.appendChild(lbl);
+          }
+
+          const hint = document.createElement("div");
+          hint.className = "hint";
+          hint.id = "hint_" + q.id;
+          hint.textContent = checkboxHint(q);
+          wrap.appendChild(hint);
+        }
+
+        // inline messages
+        const err = document.createElement("div");
+        err.className = "error";
+        err.id = "err_" + q.id;
+        wrap.appendChild(err);
+
+        const ok = document.createElement("div");
+        ok.className = "ok";
+        ok.id = "ok_" + q.id;
+        ok.textContent = "Looks good.";
+        wrap.appendChild(ok);
+
+        root.appendChild(wrap);
+      }
+    }
+
+    function textHint(q) {
+      const parts = [];
+      if (q.minLen) parts.push("Min " + q.minLen);
+      if (q.maxLen) parts.push("Max " + q.maxLen);
+      parts.push("characters.");
+      return parts.join(" ");
+    }
+
+    function checkboxHint(q) {
+      const parts = [];
+      if (q.minSelect != null) parts.push("Min select: " + q.minSelect + ".");
+      if (q.maxSelect != null) parts.push("Max select: " + q.maxSelect + ".");
+      return parts.join(" ");
+    }
+
+    // -------------------------------------------------------
+    // 3/4/5) Client-side validation + inline messages
+    // -------------------------------------------------------
+    function setState(qid, isValid, message) {
+      const wrap = $("wrap_" + qid);
+      const err = $("err_" + qid);
+      const ok = $("ok_" + qid);
+
+      wrap.classList.remove("valid", "invalid");
+      err.style.display = "none";
+      ok.style.display = "none";
+      err.textContent = "";
+
+      if (isValid === true) {
+        wrap.classList.add("valid");
+        ok.style.display = "block";
+      } else if (isValid === false) {
+        wrap.classList.add("invalid");
+        err.textContent = message || "Invalid";
+        err.style.display = "block";
+      }
+    }
+
+    function getTextValue(q) {
+      const el = $(q.id);
+      return (el ? el.value : "").trim();
+    }
+
+    function getRadioValue(q) {
+      const selected = document.querySelector('input[name="' + q.id + '"]:checked');
+      return selected ? selected.value : "";
+    }
+
+    function getCheckboxValues(q) {
+      return [...document.querySelectorAll('input[name="' + q.id + '"]:checked')].map(x => x.value);
+    }
+
+    function validateText(q) {
+      const v = getTextValue(q);
+
+      if (q.required && !v) {
+        setState(q.id, false, "This field is required.");
+        return false;
+      }
+
+      if (v) {
+        if (q.minLen && v.length < q.minLen) {
+          setState(q.id, false, "Minimum " + q.minLen + " characters required.");
+          return false;
+        }
+        if (q.maxLen && v.length > q.maxLen) {
+          setState(q.id, false, "Maximum " + q.maxLen + " characters allowed.");
+          return false;
+        }
+      }
+
+      setState(q.id, true, "");
+      return true;
+    }
+
+    function validateRadio(q) {
+      const v = getRadioValue(q);
+
+      if (q.required && !v) {
+        setState(q.id, false, "Please select one option.");
+        return false;
+      }
+
+      setState(q.id, true, "");
+      return true;
+    }
+
+    function validateCheckbox(q) {
+      const vals = getCheckboxValues(q);
+      const count = vals.length;
+
+      if (q.required && count === 0) {
+        setState(q.id, false, "Select at least 1 option.");
+        return false;
+      }
+      if (q.minSelect != null && count < q.minSelect) {
+        setState(q.id, false, "Select at least " + q.minSelect + " option(s).");
+        return false;
+      }
+      if (q.maxSelect != null && count > q.maxSelect) {
+        setState(q.id, false, "Select at most " + q.maxSelect + " option(s).");
+        return false;
+      }
+
+      setState(q.id, true, "");
+      return true;
+    }
+
+    function validateQuestion(q) {
+      if (q.type === "text") return validateText(q);
+      if (q.type === "radio") return validateRadio(q);
+      if (q.type === "checkbox") return validateCheckbox(q);
+      return true;
+    }
+
+    function validateAll() {
+      let allOk = true;
+      for (const q of questions) {
+        const ok = validateQuestion(q);
+        allOk = allOk && ok;
+      }
+
+      $("submitBtn").disabled = !allOk;
+      $("formStatus").textContent = allOk
+        ? "All validations passed. You can submit."
+        : "Complete all required answers to enable submit.";
+
+      return allOk;
+    }
+
+    // -------------------------------------------------------
+    // 6) Prevent submission until valid + show output
+    // -------------------------------------------------------
+    function collectAnswers() {
+      const out = [];
+      for (const q of questions) {
+        let ans = "";
+        if (q.type === "text") ans = getTextValue(q);
+        if (q.type === "radio") ans = getRadioValue(q);
+        if (q.type === "checkbox") ans = getCheckboxValues(q).join(", ");
+        out.push(q.label + ": " + (ans || "(empty)"));
+      }
+      return out.join("\n");
+    }
+
+    $("surveyForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!validateAll()) return;
+
+      const result = collectAnswers();
+      const box = $("resultBox");
+      box.style.display = "block";
+      box.textContent = "✅ Survey Submitted!\n\n" + result;
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+
+    $("resetBtn").addEventListener("click", () => {
+      $("surveyForm").reset();
+      $("resultBox").style.display = "none";
+      $("resultBox").textContent = "";
+
+      // clear states
+      for (const q of questions) {
+        const wrap = $("wrap_" + q.id);
+        wrap.classList.remove("valid", "invalid");
+        $("err_" + q.id).style.display = "none";
+        $("ok_" + q.id).style.display = "none";
+      }
+
+      validateAll();
+    });
+
+    // Init
+    buildSurvey();
+    validateAll();
+  </script>
+</body>
+</html>
